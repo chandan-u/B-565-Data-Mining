@@ -1,0 +1,224 @@
+---
+title: "temp"
+author: "chandan u"
+date: "2/13/2017"
+output: pdf_document
+---
+
+## 3
+
+### a
+
+```{r}
+# sample size
+n = 1000
+
+# random sample from exponential dist
+x = rexp(1000, rate=1)
+
+
+# sort values
+x = sort(x) 
+
+# frequency distribution of x
+x.freq = table(x)
+
+# cdf
+x.cdf = c()
+for(value in x){
+  x.cdf = append(x.cdf, length(x[ x <= value])/n, after= length(x.cdf))
+}
+
+plot(x,x.cdf, type="l", xlab="rexp", ylab="cumulative value", main="plot exp dist vs cdf of exp dist")
+```
+
+
+### b
+
+now that we have the cdf distribution this will be our new x.lets observe the distribution of these values:
+
+```{r}
+plot(table(x.cdf), type="l")
+```
+
+
+As you can cleary see from the plot below the distribution is uniform,this is because cdf is a percentile function and it is always increasing with x. So no two cdf values are ever same.
+
+
+### c
+even if we use a different distribution and pick samples randomly, the distribution of the Cumulative distribution function values will be always be discrete uniform distribution as CDF(x) is an increasing function, and right continuous.
+
+
+
+
+## 4
+
+Load data:
+```{r}
+
+time_series = read.csv("../time_series.csv")
+
+plot(0, xlim=c(0,220), ylim= c(0,8), xlab="time v1 to v200", ylab="magnitude at that time")
+apply(time_series, 1, lines, type="lines")
+```
+The above diagram shows the 200 time series objects. One thing is each object wave. And any wave has some properties such as amplitude and frequeny, wavelength etc. We can see that these waves differ in these properties. But for better visualization of the four models in this time-series data we have to do dimensionality reduction so we can view it better.
+
+
+Since its really hard to visualize this: we will use dimensionality reductoin technique(PCA):
+
+THE Below pca model clearly shows the four different time series models that are present in the data.
+It clearly catches the variance in the frequency and amplitude of these models. 
+
+
+```{r}
+time_series_scaled = scale(t(time_series),center=TRUE,scale=FALSE)
+
+# compute the covariace matrix (X-u)(X-u)^T   (n*1)(1*n) matrix = n*n(matrix)
+n = nrow(time_series_scaled)
+cov = t(time_series_scaled) %*% time_series_scaled/n
+
+#Perform the PCA by computing the SVD of the sample co-variance matrix:
+# singular value decomposition
+svd =  svd(cov) # take the singular value decomposition S = UDU^t
+svd$d
+#Now lets perform the PCA:
+pca = time_series_scaled %*% svd$u[,1:4]
+
+# plot the principal components:
+dim(pca)
+matplot(pca, type="l")
+legend(1, 4, c("    PC1", "    PC2", "    PC3", "    PC4"), pch="----", col = c("black", "red", "green", "blue"))
+```
+
+
+
+### b
+
+The two features that effectivly seperate the time series into four categories are: Maximum-amplitude(crest) and maximum Amplitude(trough) of the each time-series wave. 
+
+
+```{r}
+
+max_amplitude = c()
+min_amplitude = c()
+# lets derive these feautures
+for(i in c(1:nrow(time_series))){
+  obj = time_series[i,]
+  max_amplitude <<- append(max_amplitude, max(time_series[i,]), after = length(max_amplitude))
+  min_amplitude <<- append(min_amplitude, min(time_series[i,]), after = length(min_amplitude))
+}
+
+# now we have two features of each time-series object. Lets plot
+plot(max_amplitude, min_amplitude)
+```
+
+
+
+## Question 5
+
+
+### a
+
+```{r}
+c2 = c(1:1000)/1000
+c1 = c(1:999) + 1/1000
+c1 = append(c1, 1/1000, after=length(c2))
+
+plot(c1, c2)
+
+
+```
+
+### b
+
+Even though first ciritiq is more positive than second critic, neither of the critiqs ratings are dependent on each other. There is no evidence that the one critic's ratings is influenced by other.
+
+
+### c
+
+It is not possible for one critic to always give a higer percentile score. There will be one less value always. 
+
+```{r}
+c2 = c(1:1000)/1000
+c1 = c(1:999)/1000 + 1/1000
+c1 = append(c1, 1/1000, after=length(c1))
+
+```
+
+
+### d
+
+
+Nope the average of the differences $x_i - y_i$ is always zero. Lets take the above critic's reviews:
+
+```{r}
+#mean()
+sum(c1-c2)/1000
+
+```
+
+
+
+### e
+
+Yes Is is possible that $x_i > y_i$ for all but 1 movie. For example in the above distribution the number of points in c1 < c2 are:
+
+```{r}
+length(c1[c1 < c2])
+
+```
+
+
+
+
+## Questoin 6
+
+### a 
+
+It's given matrix D is with positive values. And $D_{ij}$ represents the euclidian distance between two points $(x_{i}, y_{i}) and (x_{j}, y_{j})$. But if i=j i.e $D_{ij} = D_{ii} = D_{jj} = 0$. i.e the distance between same points is always zero. Hence in the matrix D the diagonal elements are always zero. **And zero is neither positive nor negitive**. So it is not possible to  have a matrix D that has all positive numbers. So it is impossible to find the collection of points that would give us a matrix D of positive values.
+
+
+### b
+
+One way to do this is :
+
+1. consider one of the points p1 as (0,0).
+2. Take a p2 which is at a distance $D_{12}$. Use this as radius to draw a circle with center as p1 (0,0).     
+3. Now take a third point p3. Draw a circle with p1 as center and radius of $D_{13}$. 
+4. Now we have two circles with center as p1 (0,0) and radius as $D_{12}$ and $D_{13}$.   
+5. Take any point on the circe with radius $D_{12}$ and consider it as point p2.     
+6. We know the distance between p2 and p3 is $D_{23}$. From p2 draw one more circle with a radius of $D_{23}$. This circle intersects with the circle with center p1 and radius d_{13}. It intersects at two points. You can choose one of these points as p3. 
+7. We keep following the same steps for other points as well.
+
+
+
+
+
+## Question 7
+
+
+Boxplots in general reveal a lot of information:
+1. median
+2. inter quartile range( 50 percent population)
+3. min
+4. max
+5. lower quartile, upper  quartile
+6. Spread of the data
+
+So parallel boxplots could reveal intresting insights. For example lets say ur comparing weights of persons whose age is above 20 and weights of persons whose age is below 20. You build seperate box plots for each category side by side and see how the distribution is:
+
+
+```{r}
+weights_below_20= c(22,23,24, 35, 26)
+weights_above_20 = c(60, 80, 70, 99)
+
+boxplot(weights_below_20, weights_above_20, names=c("below 20 age weights", "above 20 age weights"))
+
+```
+
+There are many ways we can use boxplots to compare attributes at various levels. We can also compare various samples. 
+
+
+
+
+

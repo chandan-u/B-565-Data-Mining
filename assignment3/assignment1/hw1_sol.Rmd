@@ -1,0 +1,294 @@
+---
+title: "hw1_solutions"
+author: "chandan u"
+date: "2/1/2017"
+output: pdf_document
+---
+
+## Question 2
+
+
+From the below pairs plaot, it can be seen that both petal.length and petal.width features have same correlation with other features in the data such as sepal.length and sepal.width.  Hence we can remove one of these features as they provide us the similar amount of information(having both of them is redundent.). What we need is un-correlated features which means each features has some or the other differnt information to help us for classification/regresison. 
+
+
+```{r}
+data(iris)
+pairs(~Sepal.Length + Sepal.Width + Petal.Length + Petal.Width + Species , data=iris)
+
+```
+
+
+
+## Question 3
+
+### a
+
+Yes this is a resonable model As long as the poeple who are measuring are unbiased estimators and also given that the samlpe size is large enough.( and hundred might be good start)
+
+### b
+
+Irrespective of the distribution of the population the sample mean distribution is approximately normal ( if sample sizes are large enough).
+
+$n bar = \mu$  and $sd = \frac{\sigma}{\sqrt(n)}$
+
+
+### c 
+
+We have to find the z statistic using the CLT theorem: So the probability that sample mean misses the population mean by two beans is :
+
+P(x< - Z) + P(x > Z) which is nothing but,
+1 - (pnorm(z) - pnorm(-z))
+
+where z is Z statistic
+
+```{r}
+
+# n_bar - actualmean
+difference = 2  
+sd = 10
+# as per CLT the z statistic is 
+z = difference/sd
+
+# the probability for more n_bar misssing mean by 2 beans is 
+1 - (pnorm(z) - pnorm(-z))
+```
+
+Hence the probabiliy that the n_bar misses population mean by two beans is 0.8414806.
+
+
+### d
+
+n_bar - $n_{true}$ gives the bias of the sample mean.
+
+
+
+## Question 4
+
+
+
+### a
+
+compute the sample covariance matrix:
+
+```{r}
+# load data: trees
+data("trees")
+
+# column names
+#names(trees)
+
+
+# convert the data frame to matrix: all columns are numeric
+# hence can be converted without any hassle
+X = as.matrix(trees)
+
+#par(mfrow = c(2, 1))
+# pairs plot before scaling
+#pairs( X )
+
+# scaling
+X = scale(X,center=TRUE,scale=FALSE)
+
+# pairs plot after scaling
+# the numeric values of each column has been scaled with mean (subtracted)
+# the correlation still remains the same
+#x11()
+#pairs(X)
+
+# compute the covariace matrix (X-u)(X-u)^T   (n*1)(1*n) matrix = n*n(matrix)
+n = nrow(trees)
+cov = t(X) %*% X/n
+cov
+```
+
+
+### b
+
+Perform the PCA by computing the SVD of the sample co-variance matrix:
+
+```{r}
+# singular value decomposition
+svd =  svd(cov) # take the singular value decomposition S = UDU^t
+svd
+
+```
+
+Now lets perform the PCA:
+
+```{r}
+dim(X)
+dim(svd$u)
+X %*% svd$u
+```
+
+
+
+
+### c
+
+To build a principal component regression model we will use the column of U associated with the smallest value in the Diagonal matrix D:
+
+The smallest element of D is third element.
+
+```{r}
+x = svd$u[,3]
+lm( x[3] ~ x[1] + x[2])
+```
+
+
+## Question 5
+
+
+```{r}
+X = read.csv("./data/mystery.csv")
+
+X = as.matrix(X)
+X = scale(X,center=TRUE,scale=FALSE)
+n = nrow(X)
+cov = t(X) %*% X/n
+svd = svd(cov)
+
+svd$d
+```
+
+As you can see in the  diagnoal matrix the first five values in the diagonal are positive and large.
+Hence if we consider only these five values we wont have any loss of information. Now lets compute the principal components
+
+
+
+```{r}
+PCA <- X %*% svd$u[,1:5]
+PCA[1:5,]
+```
+
+## Question 16
+
+### a
+
+If a term occurs in one document : The the tf-idf transformation to data means, the term is more important.     
+
+If a term occurs in every document : Then the transformation assigns zero values making the term least important as it occurs everywhere. 
+
+
+### b
+
+The $log_(m/df_i)$ only offsets the occurance of a word across the documents. As some words appear more frequently and provide less information as they are common such as ( the word the, a etc). Some words are very specific to a document and may give important information related to that document.
+
+
+
+
+## Question 17
+
+
+### a
+
+The interval of (a,b) in terms of X is  $(a^2, b^2)$    
+
+as a,b is square root values in $x^*$
+
+### b
+
+Since  the relation is linear we can consider this as:
+
+$y  = m\sqrt(x)$
+$y^2 = m^2x$
+Which is a parablic equation. Hence y relates to x as a parabola.
+
+
+
+## Question 25
+
+
+### a 
+
+Given: There are three points: x, y and z which belongs to set S
+       and d(x,z$\in$S)    
+       and d(x,y) can be easily computed once using the distance formula. ( This is a one time calculation).    
+
+
+We have to find all the points from y to points in S that are in the range of $\epsilon$. 
+ i.e d(y,z$\in$S) <= $\epsilon$.    
+ 
+The usual way to find these points is to use the distance formula (euclidian distance) to compute the distances from y to z. But our goal is to reduce the calculations . In order acheive that we will use the triangle inequality i.e sum of two sides is always greater than the third side:
+
+so in triange $\Delta$xyz:  d(x,y)  $\leq$ d(y,z) + d(x,z)
+In the above equation d(x,z) is given
+And , d(x,y) is just computed once, so using these we can derive the equation as:
+d(x,y) - d(x,z) $\leq \epsilon$    
+i.e if the difference is less than equal to $\epsilon$ then the point z is within $\epsilon$ distance.
+    if the difference is greater than z is not within $\epsilon$ distance.
+We are not doing direct distance calculations. Instead we are using given distances to infer the nature of the third distance. 
+
+
+
+### b
+
+When $x\neq y$ we only calcuate the d(x,y) just once. If x = y then we need not compute d(x,y) as they are same points and d(x,S) is already known.
+
+
+
+
+### c
+
+Let x be the point and we have to find all the points that are within $\beta$ distance of x.
+Let this point be y. and $x \neq y$. 
+
+Now consider another set of points x' , y'  such that , 
+x' is epsilon distance from x, i.e 
+and y' is epsilon distance from y   (every point has atleast one other point which is in range of epsilon). so D(x,x') and  D(y,y') = $\epsilon$
+
+Therefore by triange equalitly:    
+D(x',y') - D(x,x') - D(y,y') $\leq \beta$
+D(x',y') - 2$\epsilon \leq \beta$
+But we already have the value of D(x',y') ( from the distance matrix.)
+
+Similarly,
+
+D(x',y') + D(x,x') + D(y,y') $\geq \beta$
+D(x',y') + 2$\epsilon \geq \beta$
+
+So the domain is :
+
+D(x',y') - 2$\epsilon \leq \beta$ D(x',y') + 2
+
+So when we are using triangle inequalities to find the point within distance $\beta$ , the above inequalities should be satisfied.
+
+## Quesiton 26
+
+d(x,y) = 1 - j(x,y)
+let, d(x,y) = 0
+1-j(x,y) = 0
+j(x,y) = 1
+
+1 = $\frac{f_{11}}/{(f_{11} + f_{01} + f_{10})}$
+$f_{11} = f_{11} + f_{01} + f_{10}$
+
+where $f_{10}$ means x is 1 and y is 0
+So  $f_{01} and f_{10}$  should be zero for the above eqution to be true. 
+
+But since $f_{01} and f_{10} is 0$, then it means x = y
+this proves the first axiom
+
+
+Second Axiom: d(x,y) = d(y,x)
+
+1 - $\frac{f_{11}}/{(f_{11} + f_{01} + f_{10})}$ = d(x,y)
+here $f_{01}$ means x is zero and y is one
+similarly,
+
+1 - $\frac{f_{11}}/{(f_{11} + f_{01} + f_{10})}$ = d(y,x)
+here $f_{01}$ means x is one and y is zero
+
+But still these two equations are same as they same elements in the numerator and the denominator.
+
+So therefore d(x,y) = d(y,x) which proves the axiom tow
+
+
+
+
+
+
+
+
+
+
